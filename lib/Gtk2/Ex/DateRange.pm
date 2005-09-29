@@ -1,6 +1,6 @@
 package Gtk2::Ex::DateRange;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use strict;
 use warnings;
@@ -13,17 +13,7 @@ sub new {
 	my ($class, $preselected) = @_;
 	my $self  = {};
 	bless ($self, $class);
-	my $widget = $self->_get_widget;
-	$self->{widget} = $widget;
-	$widget->signal_connect('realize' => 
-		sub {
-			$self->{joinercombo}->set_sensitive(FALSE) unless $self->{model};
-			unless ($self->{model}) {
-				$self->{joinercombo}->set_active(0) ;
-				$self->{commandcombo1}->set_active(0);
-			}
-		}
-	);
+	$self->{widget} = $self->_get_widget;
 	return $self;
 }
 
@@ -34,6 +24,11 @@ sub get_model {
 
 sub set_model {
 	my ($self, $model) = @_;
+	if (!$model) {
+		$self->_clear;
+		return;
+	}
+	$self->{freezesignals} = TRUE;
 	my $commandchoices = $self->{commandchoices};
 	my $joinerchoices  = $self->{joinerchoices};
 	my $i = 0;	my $commandhash = 	{ map { $_ => $i++ } @$commandchoices };
@@ -43,24 +38,34 @@ sub set_model {
 	$self->{commandcombo1}->set_active($commandhash->{$model->[0]});
 	_set_calendar_date($self->{calendar1}, $model->[1]);
 	_update_date_label($self->{calendar1}, $self->{datelabel1});
-	return if $#{@$model} == 1;
+	if ($#{@$model} == 1) {
+		$self->{freezesignals} = FALSE;
+		&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
+		return;
+	}
 	
 	$self->{joinercombo}->set_active($joinerhash->{$model->[2]});
 	
 	$self->{commandcombo2}->set_active($commandhash->{$model->[3]});
 	_set_calendar_date($self->{calendar2}, $model->[4]);
 	_update_date_label($self->{calendar2}, $self->{datelabel2});
+	
+	$self->{freezesignals} = FALSE;
+	&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};		
 }
 
 sub _clear {
 	my ($self) = @_;
-	$self->{model} = undef;
-	$self->{commandcombo1}->set_active(0);
+	$self->{freezesignals} = TRUE;
+	$self->{commandcombo1}->set_active(-1);
 	$self->{datelabel1}->set_label('(select a date)');
 	$self->{joinercombo}->set_active(0);
 	$self->{joinercombo}->set_sensitive(FALSE);
-	$self->{commandcombo2}->set_active(0);
+	$self->{commandcombo2}->set_active(-1);
 	$self->{datelabel2}->set_label('(select a date)');
+	$self->{model} = undef;
+	$self->{freezesignals} = FALSE;
+	&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
 }
 
 sub attach_popup_to {
@@ -122,9 +127,11 @@ sub _get_widget {
 	}
 	$commandcombo1->signal_connect ( 'changed' =>
 		sub {
-			$self->{model}->[0] = $commandchoices->[$commandcombo1->get_active()];			
+			$self->{model}->[0] = $commandchoices->[$commandcombo1->get_active()]
+				unless $commandcombo1->get_active() < 0;
 			$self->{datelabelbox1}->set_sensitive(TRUE);
-			&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
+			&{ $self->{signals}->{'changed'} } 
+				if $self->{signals}->{'changed'} and !$self->{freezesignals};
 		}
 	);
 
@@ -136,10 +143,12 @@ sub _get_widget {
 		$commandcombo2->append_text($x);
 	}
 	$commandcombo2->signal_connect ( 'changed' =>
-		sub {			
-			$self->{model}->[3] = $commandchoices->[$commandcombo2->get_active()];
+		sub {
+			$self->{model}->[3] = $commandchoices->[$commandcombo2->get_active()]
+				unless $commandcombo2->get_active() < 0;
 			$self->{datelabelbox2}->set_sensitive(TRUE);
-			&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
+			&{ $self->{signals}->{'changed'} } 
+				if $self->{signals}->{'changed'} and !$self->{freezesignals};
 		}
 	);
 
@@ -156,7 +165,9 @@ sub _get_widget {
 				$datelabelbox2->hide_all;
 				$commandcombo2->set_no_show_all(TRUE);
 				$datelabelbox2->set_no_show_all(TRUE);
-				$self->{model}->[2] = undef;
+				$commandcombo2->set_active(-1);
+				$datelabel2->set_label('(select a date)');
+				$self->{model} = [$self->{model}->[0], $self->{model}->[1]];
 			} else {
 				$commandcombo2->set_no_show_all(FALSE);
 				$datelabelbox2->set_no_show_all(FALSE);
@@ -164,7 +175,8 @@ sub _get_widget {
 				$datelabelbox2->show_all;
 				$self->{model}->[2] = $joinerchoices->[$joinercombo->get_active()];
 			}			
-			&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
+			&{ $self->{signals}->{'changed'} } 
+				if $self->{signals}->{'changed'} and !$self->{freezesignals};
 		}
 	);
 
@@ -231,7 +243,8 @@ sub _calendar_popup {
 			$self->{model}->[$num] = _get_date_string($calendar);
 			$self->{joinercombo}->set_sensitive(TRUE) if ($num == 1);
 			$datepopup->hide;
-			&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
+			&{ $self->{signals}->{'changed'} } 
+				if $self->{signals}->{'changed'} and !$self->{freezesignals};
 		}
 	);
 	$calendar->signal_connect ( 'day-selected' =>

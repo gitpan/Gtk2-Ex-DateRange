@@ -5,30 +5,40 @@ use Gtk2 -init;
 use Data::Dumper;
 use Gtk2::Ex::DateRange;
 
-use Gtk2::TestHelper tests => 1;
+use Gtk2::TestHelper tests => 13;
 
 my $daterange = Gtk2::Ex::DateRange->new;
 isa_ok($daterange, "Gtk2::Ex::DateRange");
-
+my $changed = 0;
 $daterange->signal_connect('changed' =>
 	sub {
-		print Dumper $daterange->get_model;
+		$changed++;
+		print Dumper "here\n";
 	}
 );
-my $window = Gtk2::Window->new;
-$window->signal_connect('destroy' => sub { Gtk2->main_quit });
+ok(!$daterange->get_model);
+
+$daterange->set_model(undef);
+is($changed, 1);
+ok(!$daterange->get_model);
+
+$daterange->set_model([ 'after', '1965-03-12', 'and', 'before', '1989-02-14' ]);
+is($changed, 2);
+ok (Dumper $daterange->get_model, Dumper [ 'after', '1965-03-12', 'and', 'before', '1989-02-14' ]);
+
+$daterange->set_model(undef);
+is($changed, 3);
+ok(!$daterange->get_model);
+
+$daterange->set_model([ 'after', '1965-03-12']);
+is($changed, 4);
+ok (Dumper $daterange->get_model, Dumper [ 'after', '1965-03-12']);
+
+$daterange->set_model(undef);
+is($changed, 5);
+ok(!$daterange->get_model);
+
+ok($daterange->{widget});
 
 
-my $vbox = Gtk2::VBox->new (FALSE);
-$vbox->pack_start ($daterange->{widget}, FALSE, FALSE, 0); 	
-$vbox->pack_start (Gtk2::Label->new, TRUE, TRUE, 0); 
-
-my $hbox = Gtk2::HBox->new (FALSE);
-$hbox->pack_start ($vbox, FALSE, FALSE, 0); 	
-$hbox->pack_start (Gtk2::Label->new, TRUE, TRUE, 0); 
-
-$window->add($hbox);
-
-$window->set_default_size(300, 400);
-$window->show_all;
 

@@ -9,8 +9,6 @@ t/pod-coverage.t
 t/pod.t
 t/show-range.t
 t/show-range-popup.t
-t/show-range-with-model-1.t
-t/show-range-with-model-2.t
 examples/show-range.pl
 examples/show-range-popup.pl
 examples/show-range-with-model-1.pl

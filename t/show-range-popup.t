@@ -9,7 +9,6 @@ use Gtk2::TestHelper tests => 1;
 
 my $daterange = Gtk2::Ex::DateRange->new;
 isa_ok($daterange, "Gtk2::Ex::DateRange");
-
 $daterange->set_model([ 'after', '1965-03-12', 'and', 'before', '1989-02-14' ]);
 $daterange->signal_connect('changed' =>
 	sub {
