@@ -8,7 +8,10 @@ use Gtk2::Ex::DateRange;
 my $daterange = Gtk2::Ex::DateRange->new;
 $daterange->signal_connect('changed' =>
 	sub {
-		print Dumper $daterange->get_model;
+		my $model = $daterange->get_model;
+		print Dumper $model;
+		my $sql_condition = $daterange->to_sql_condition('mydate', $model);
+		print "$sql_condition\n" if $sql_condition;
 	}
 );
 my $clear = Gtk2::Button->new_from_stock('gtk-clear');

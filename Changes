@@ -13,3 +13,7 @@ Revision history for Gtk2-Ex-DateRange
 	
 0.04    Sep 29, 2005
 	Bug fixes. More tests
+	
+0.05    Sep 29, 2005
+	Added to_sql_condition()
+	More tests	

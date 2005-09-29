@@ -1,6 +1,6 @@
 package Gtk2::Ex::DateRange;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use strict;
 use warnings;
@@ -56,6 +56,43 @@ sub set_model {
 	
 	$self->{freezesignals} = FALSE;
 	&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};		
+}
+
+sub to_sql_condition {
+	my ($self, $fieldname, $model) = @_;
+	my $conversion = {
+		'before' => ' < ',
+		'after' => ' > ',
+		'on or before' => ' <= ',
+		'on or after' => ' >= ',
+	};
+	return undef if $#{@$model} < 1;
+	if ($#{@$model} >= 1 and $#{@$model} < 4) {
+		my $str =
+			 $fieldname
+			.$conversion->{$model->[0]}
+			.'\''
+			.$model->[1]
+			.'\'';
+		return $str;
+	}
+	if ($#{@$model} == 4) {
+		my $str1 =
+			 $fieldname
+			.$conversion->{$model->[0]}
+			.'\''
+			.$model->[1]
+			.'\'';
+		my $str2 = $model->[2];
+		my $str3 =
+			 $fieldname
+			.$conversion->{$model->[3]}
+			.'\''
+			.$model->[4]
+			.'\'';
+		my $str = "( $str1 $str2 $str3 )";
+		return $str;
+	}	
 }
 
 sub _clear {
@@ -349,6 +386,12 @@ The C<$model> is a ref to a list with 5 parameters;
 
 This method returns a C<Gtk2::Ex::PopupWindow>. The popup window will contain
 a C<Gtk2::Ex::DateRange> widget and two buttons.
+
+=head2 to_sql_condition($datefieldname, $model);
+
+Converts the C<$model> into an SQL condition so that it can be used directly in
+and SQL statement. C<$datefieldname> is the fieldname that will be used inside
+the SQL condition.
 
 =head1 SIGNALS
 
