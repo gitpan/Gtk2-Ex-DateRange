@@ -6,3 +6,7 @@ Revision history for Gtk2-Ex-DateRange
 0.02    Sep 29, 2005
 	Fixed issue with clear button in popup
 	Added a few real tests
+
+0.03    Sep 29, 2005
+	Fixed the examples.
+	Bug fix - joinercombo should be insensitive on clear

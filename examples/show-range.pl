@@ -14,7 +14,7 @@ $daterange->signal_connect('changed' =>
 my $clear = Gtk2::Button->new_from_stock('gtk-clear');
 $clear->signal_connect ('button-release-event' => 
 	sub {
-		$daterange->set_model([ 'after', '1965-03-12', 'and', 'before', '1989-02-14' ]);
+		$daterange->set_model(undef);
 	}
 );
 my $window = Gtk2::Window->new;

@@ -1,6 +1,6 @@
 package Gtk2::Ex::DateRange;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use strict;
 use warnings;
@@ -196,6 +196,7 @@ sub _get_widget {
 	$self->{joinercombo}   = $joinercombo;	
 
 	$self->{datelabelbox1}->set_sensitive(FALSE);
+	$self->{joinercombo}->set_sensitive(FALSE);
 	$self->{datelabelbox2}->set_sensitive(FALSE);
 
 	my $table = Gtk2::Table->new(3,3,FALSE);

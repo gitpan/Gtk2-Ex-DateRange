@@ -41,4 +41,3 @@ ok(!$daterange->get_model);
 ok($daterange->{widget});
 
 
-
