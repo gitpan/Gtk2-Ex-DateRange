@@ -10,3 +10,6 @@ Revision history for Gtk2-Ex-DateRange
 0.03    Sep 29, 2005
 	Fixed the examples.
 	Bug fix - joinercombo should be insensitive on clear
+	
+0.04    Sep 29, 2005
+	Bug fixes. More tests

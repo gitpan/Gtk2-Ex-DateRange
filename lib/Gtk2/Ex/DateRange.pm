@@ -1,6 +1,6 @@
 package Gtk2::Ex::DateRange;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use strict;
 use warnings;
@@ -39,6 +39,10 @@ sub set_model {
 	_set_calendar_date($self->{calendar1}, $model->[1]);
 	_update_date_label($self->{calendar1}, $self->{datelabel1});
 	if ($#{@$model} == 1) {
+		$self->{freezesignals} = TRUE;
+		$self->{joinercombo}->set_active(0);
+		$self->{commandcombo2}->set_active(-1);
+		$self->{datelabel2}->set_label('(select a date)');
 		$self->{freezesignals} = FALSE;
 		&{ $self->{signals}->{'changed'} } if $self->{signals}->{'changed'};
 		return;
@@ -59,6 +63,7 @@ sub _clear {
 	$self->{freezesignals} = TRUE;
 	$self->{commandcombo1}->set_active(-1);
 	$self->{datelabel1}->set_label('(select a date)');
+	$self->{datelabelbox1}->set_sensitive(FALSE);
 	$self->{joinercombo}->set_active(0);
 	$self->{joinercombo}->set_sensitive(FALSE);
 	$self->{commandcombo2}->set_active(-1);
@@ -165,18 +170,18 @@ sub _get_widget {
 				$datelabelbox2->hide_all;
 				$commandcombo2->set_no_show_all(TRUE);
 				$datelabelbox2->set_no_show_all(TRUE);
+				$self->{model} = [$self->{model}->[0], $self->{model}->[1]];
 				$commandcombo2->set_active(-1);
 				$datelabel2->set_label('(select a date)');
-				$self->{model} = [$self->{model}->[0], $self->{model}->[1]];
 			} else {
 				$commandcombo2->set_no_show_all(FALSE);
 				$datelabelbox2->set_no_show_all(FALSE);
 				$commandcombo2->show_all;
 				$datelabelbox2->show_all;
-				$self->{model}->[2] = $joinerchoices->[$joinercombo->get_active()];
-			}			
-			&{ $self->{signals}->{'changed'} } 
-				if $self->{signals}->{'changed'} and !$self->{freezesignals};
+				$self->{model}->[2] = $joinerchoices->[$joinercombo->get_active()];		
+				&{ $self->{signals}->{'changed'} } 
+					if $self->{signals}->{'changed'} and !$self->{freezesignals};
+			}
 		}
 	);
 
