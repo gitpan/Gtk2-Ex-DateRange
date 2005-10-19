@@ -19,6 +19,8 @@ my $popup = $daterange->attach_popup_to($label);
 $labelbox->signal_connect('button-press-event' => 
 	sub {
 		$popup->show;
+		return TRUE; # Very Important...
+		             # If you don't return true, then the popup will get closed
 	}
 );
 my $window = Gtk2::Window->new;

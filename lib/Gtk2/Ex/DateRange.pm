@@ -1,6 +1,6 @@
 package Gtk2::Ex::DateRange;
 
-our $VERSION = '0.05';
+our $VERSION = '0.07';
 
 use strict;
 use warnings;
@@ -114,26 +114,27 @@ sub attach_popup_to {
 	my ($self, $parent) = @_;
 	my $popupwindow = Gtk2::Ex::PopupWindow->new($parent);
 	$popupwindow->set_move_with_parent(TRUE);
-	my $close = Gtk2::Button->new_from_stock('gtk-close');
-	$close->signal_connect ('button-release-event' => 
+	my $okbutton = Gtk2::Button->new_from_stock('gtk-ok');
+	$okbutton->signal_connect ('button-release-event' => 
 		sub {
 			$popupwindow->hide;
 		}
 	);
-	my $clear = Gtk2::Button->new_from_stock('gtk-clear');
-	$clear->signal_connect ('button-release-event' => 
+	my $clearbutton = Gtk2::Button->new_from_stock('gtk-clear');
+	$clearbutton->signal_connect ('button-release-event' => 
 		sub {
 			$self->_clear;
 		}
 	);
 	my $hbox = Gtk2::HBox->new(TRUE, 0);
-	$hbox->pack_start ($clear, TRUE, TRUE, 0); 	
-	$hbox->pack_start ($close, TRUE, TRUE, 0); 	
+	$hbox->pack_start ($clearbutton, TRUE, TRUE, 0); 	
+	$hbox->pack_start ($okbutton, TRUE, TRUE, 0); 	
 	my $vbox = Gtk2::VBox->new (FALSE, 0);
 	$vbox->pack_start ($self->{widget}, TRUE, TRUE, 0);
 	$vbox->pack_start ($hbox, FALSE, FALSE, 0); 	
 	my $frame = Gtk2::Frame->new;
 	$frame->add($vbox);
+	$self->{popup} = $popupwindow;
 	$popupwindow->{window}->add($frame);
 	return $popupwindow;	
 }
@@ -240,6 +241,10 @@ sub _get_widget {
 	$self->{datelabelbox1}->set_sensitive(FALSE);
 	$self->{joinercombo}->set_sensitive(FALSE);
 	$self->{datelabelbox2}->set_sensitive(FALSE);
+	
+	$commandcombo1->set_wrap_width(1);
+	$joinercombo->set_wrap_width(1);
+	$commandcombo2->set_wrap_width(1);
 
 	my $table = Gtk2::Table->new(3,3,FALSE);
 	$table->set_col_spacings(5);
@@ -279,8 +284,8 @@ sub _calendar_popup {
 	my ($self, $datelabel, $calendar, $num) = @_;
 	my $datelabelbox = _add_button_press(_add_arrow($datelabel));
 	my $datepopup = Gtk2::Ex::PopupWindow->new($datelabel);
-	my $apply = Gtk2::Button->new_from_stock('gtk-close');
-	$apply->signal_connect ('button-release-event' => 
+	my $okbutton = Gtk2::Button->new_from_stock('gtk-ok');
+	$okbutton->signal_connect ('button-release-event' => 
 		sub {
 			_update_date_label($calendar, $datelabel);
 			$self->{model}->[$num] = _get_date_string($calendar);
@@ -298,7 +303,7 @@ sub _calendar_popup {
 		}
 	);	
 	my $hbox = Gtk2::HBox->new (TRUE, 0);
-	$hbox->pack_start ($apply, TRUE, TRUE, 0); 	
+	$hbox->pack_start ($okbutton, TRUE, TRUE, 0); 	
 	my $vbox = Gtk2::VBox->new (FALSE, 0);
 	$vbox->pack_start ($calendar, TRUE, TRUE, 0); 
 	$vbox->pack_start ($hbox, FALSE, FALSE, 0); 	
@@ -308,6 +313,31 @@ sub _calendar_popup {
 			$datepopup->show;
 		}
 	);
+	
+	$datepopup->signal_connect('show' => 
+		sub {
+			return unless $self->{popup};
+			if ($^O =~ /Win32/) {
+				$self->{popup}->set_move_with_parent(TRUE);
+				$self->{popup}->show;
+			}
+		}
+	);
+	$datepopup->signal_connect('hide' => 
+		sub {
+			return unless $self->{popup};
+			if ($^O =~ /Win32/) {
+				$self->{popup}->set_move_with_parent(FALSE);
+			}
+		}
+	);
+	if ($self->{popup}) {
+	$self->{popup}->signal_connect('hide' => 
+		sub {
+			$datepopup->hide;
+		}
+	);
+	}
 	return $datelabelbox;
 }
 
@@ -392,6 +422,10 @@ a C<Gtk2::Ex::DateRange> widget and two buttons.
 Converts the C<$model> into an SQL condition so that it can be used directly in
 and SQL statement. C<$datefieldname> is the fieldname that will be used inside
 the SQL condition.
+
+=head2 signal_connect($signal, $callback);
+
+See the SIGNALS section to see the supported signals.
 
 =head1 SIGNALS
 
